@@ -22,30 +22,109 @@ exports.signup = async (req, res) => {
       });
     }
 
-    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationCode = emailService.generateCode();
 
     const user = await User.create({
       name,
       email,
       password,
-      verificationToken,
+      verificationCode,
+      verificationCodeExpires: Date.now() + 10 * 60 * 1000,
     });
 
-    await emailService.sendWelcomeEmail(email, name);
+    await emailService.sendWelcomeWithCode(email, name, verificationCode);
 
-    await emailService.sendVerificationEmail(email, verificationToken);
+    res.status(201).json({
+      success: true,
+      message: "ثبت نام موفق! کد تایید به ایمیل شما ارسال شد",
+      userId: user._id,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
-    const token = createToken(user._id);
+exports.verifyCode = async (req, res) => {
+  try {
+    const { email, code } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "شما ثبت نام نکردید .",
+      });
+    }
+
+    if (user.verificationCode !== code) {
+      return res.status(400).json({
+        success: false,
+        message: "کد وارد شده اشتباه است .",
+      });
+    }
+
+    if (user.verificationCodeExpires < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "کد منقضی شده است . ",
+      });
+    }
+
+    user.isVerified = true;
+    user.verificationCode = undefined;
+    user.verificationCodeExpires = undefined;
+    await user.save();
 
     res.status(200).json({
       success: true,
-      message: "ثبت نام موفق . ایمیل تایید ارسال شد .",
+      message: "ایمیل شما با موفقیت تایید شد . :) ",
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
       },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.resendCode = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await user.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "کاربر یافت نشد",
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "ایمیل قبلا تایید شده .",
+      });
+    }
+
+    const newCode = emailService.generateCode();
+    user.verificationCode = newCode;
+    user.verificationCodeExpires = Date.now() + 10 * 60 * 1000;
+
+    await emailService.resendCode(email, newCode);
+    res.status(200).json({
+      success: true,
+      message: "کد جدید ارسال شد .",
     });
   } catch (error) {
     res.status(500).json({
