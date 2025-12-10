@@ -133,3 +133,57 @@ exports.resendCode = async (req, res) => {
     });
   }
 };
+
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "ایمیل و پسورد الزامی است . ",
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "ایمیل وارد شده صحیح نمیباشد یا ثبت نام نکرده اید /",
+      });
+    }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "زمز وارد شده اشتباه است . ",
+      });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).json({
+        success: false,
+        message: "لطفا ابتدا ایمیل خود را تایید کنید . :)ّ",
+      });
+    }
+    const token = createToken(user._id);
+
+    res.status(200).json({
+      success: true,
+      message: " ورود موفق . ",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
