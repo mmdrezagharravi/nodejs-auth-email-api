@@ -1,21 +1,20 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
-const { verify } = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, " name is required ."],
+    required: [true, "نام الزامی است"],
   },
   email: {
     type: String,
-    required: [true, " email is require. "],
+    required: [true, "ایمیل الزامی است"],
     unique: true,
     lowercase: true,
   },
   password: {
     type: String,
-    required: [true, "password is required . "],
+    required: [true, "پسورد الزامی است"],
     minlength: 6,
   },
   isVerified: {
@@ -25,11 +24,9 @@ const userSchema = new mongoose.Schema({
   verificationCode: {
     type: String,
   },
-  // verificationToken: String,
   verificationCodeExpires: {
     type: Date,
   },
-
   createdAt: {
     type: Date,
     default: Date.now,
@@ -42,8 +39,8 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-userSchema.method.compearPassword = async function (condidatePassword) {
-  return await bcrypt.compare(condidatePassword.password, this.password);
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
 module.exports = mongoose.model("User", userSchema);
