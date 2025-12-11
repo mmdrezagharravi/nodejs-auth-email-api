@@ -37,7 +37,7 @@ exports.sendWelcomeWithCode = async (userEmail, userName, code) => {
                 </div>
                 
                 <p style="color: #999; font-size: 14px;">
-                    ⏰ این کد تا ۱۰ دقیقه معتبر است.
+                    ⏰ این کد تا 2 دقیقه معتبر است.
                 </p>
                 
                 <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
@@ -70,7 +70,7 @@ exports.resendCode = async (userEmail, code) => {
                 </div>
                 
                 <p style="color: #999; font-size: 14px;">
-                    ⏰ این کد تا ۱۰ دقیقه معتبر است.
+                    ⏰ این کد تا 2 دقیقه معتبر است.
                 </p>
                 
             </div>

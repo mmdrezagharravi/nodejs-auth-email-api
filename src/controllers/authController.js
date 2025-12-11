@@ -29,7 +29,7 @@ exports.signup = async (req, res) => {
       email,
       password,
       verificationCode,
-      verificationCodeExpires: Date.now() + 10 * 60 * 1000,
+      verificationCodeExpires: Date.now() + 10 * 60 * 200,
     });
 
     await emailService.sendWelcomeWithCode(email, name, verificationCode);
@@ -121,7 +121,7 @@ exports.resendCode = async (req, res) => {
 
     const newCode = emailService.generateCode();
     user.verificationCode = newCode;
-    user.verificationCodeExpires = Date.now() + 10 * 60 * 1000;
+    user.verificationCodeExpires = Date.now() + 10 * 60 * 200;
 
     await emailService.resendCode(email, newCode);
     res.status(200).json({
