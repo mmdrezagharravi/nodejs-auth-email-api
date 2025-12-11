@@ -16,7 +16,7 @@ exports.signup = async (req, res) => {
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
-      return res.send(400).json({
+      return res.status(400).json({
         success: false,
         message: "این ایمیل قبلا ثبت شده است .",
       });
@@ -79,6 +79,8 @@ exports.verifyCode = async (req, res) => {
     user.verificationCodeExpires = undefined;
     await user.save();
 
+    const token = createToken(user._id);
+
     res.status(200).json({
       success: true,
       message: "ایمیل شما با موفقیت تایید شد . :) ",
@@ -101,7 +103,7 @@ exports.resendCode = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = await user.findOne({ email });
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(404).json({
